@@ -831,14 +831,14 @@ class st7735(ili9XXX):
 
 class st7796s(ili9XXX):
 
-    # The st7796s display controller has an internal framebuffer arranged in a 480x320 pixel
-    # configuration. Physical displays with pixel sizes less than 480x320 must supply a start_x and
+    # The st7796s display controller has an internal framebuffer arranged in a 320x480 pixel
+    # configuration. Physical displays with pixel sizes less than 320x480 must supply a start_x and
     # start_y argument to indicate where the physical display begins relative to the start of the
     # display controllers internal framebuffer.
 
     def __init__(self,
         miso=12, mosi=13, clk=14, cs=15, dc=21, rst=22, power=-1, backlight=23, backlight_on=1, power_on=0,
-        spihost=esp.HSPI_HOST, mhz=40, factor=4, hybrid=True, width=480, height=320, start_x=0, start_y=0,
+        spihost=esp.HSPI_HOST, mhz=40, factor=4, hybrid=True, width=320, height=480, start_x=0, start_y=0,
         colormode=COLOR_MODE_BGR, rot=PORTRAIT, invert=True, double_buffer=True, half_duplex=True,
         asynchronous=False, initialize=True):
 
@@ -852,29 +852,23 @@ class st7796s(ili9XXX):
         self.display_name = 'ST7796S'
 
         self.init_cmds = [
-            {'cmd':  0x11, 'data': bytes([0x0]), 'delay': 120},
-            {'cmd':  0x13, 'data': bytes([0x0])},
-
-            {'cmd':  0x36, 'data': bytes([
-                self.madctl(colormode, rot, (0x0, MADCTL_MX | MADCTL_MV, MADCTL_MY | MADCTL_MX, MADCTL_MY | MADCTL_MV))])},  # MADCTL
-
-            {'cmd':  0xb6, 'data': bytes([0xa, 0x82])},
-            {'cmd':  0x3a, 'data': bytes([0x55]),'delay': 10},
-            {'cmd':  0xb2, 'data': bytes([0xc, 0xc, 0x0, 0x33, 0x33])},
-            {'cmd':  0xb7, 'data': bytes([0x35])},
-            {'cmd':  0xbb, 'data': bytes([0x28])},
-            {'cmd':  0xc0, 'data': bytes([0xc])},
-            {'cmd':  0xc2, 'data': bytes([0x1, 0xff])},
-            {'cmd':  0xc3, 'data': bytes([0x10])},
-            {'cmd':  0xc4, 'data': bytes([0x20])},
-            {'cmd':  0xc6, 'data': bytes([0xf])},
-            {'cmd':  0xd0, 'data': bytes([0xa4, 0xa1])},
-            {'cmd':  0xe0, 'data': bytes([0xd0, 0x0, 0x2, 0x7, 0xa, 0x28, 0x32, 0x44, 0x42, 0x6, 0xe, 0x12, 0x14, 0x17])},
-            {'cmd':  0xe1, 'data': bytes([0xd0, 0x0, 0x2, 0x7, 0xa, 0x28, 0x31, 0x54, 0x47, 0xe, 0x1c, 0x17, 0x1b, 0x1e])},
-            {'cmd':  0x21, 'data': bytes([0x0])},
-            {'cmd':  0x2a, 'data': bytes([0x0, 0x0, 0x0, 0xe5])},
-            {'cmd':  0x2b, 'data': bytes([0x0, 0x0, 0x1, 0x3f]), 'delay': 120},
-            {'cmd':  0x29, 'data': bytes([0x0]), 'delay': 120}
+            {'cmd': 0x01, 'data': bytes([0]), 'delay': 120},			# Software reset
+            {'cmd': 0x11, 'data': bytes([0]), 'delay': 120},			# Sleep exit
+						{'cmd': 0xF0, 'data': bytes([0xC3])},			# Command Set control Enable extension command 2 partI
+						{'cmd': 0xF0, 'data': bytes([0x96])},			# Command Set control Enable extension command 2 partII
+            {'cmd': 0x36, 'data': bytes([self.madctl(colormode, rot, ORIENTATION_TABLE)])},			# Memory Data Access Control MX, MY, RGB mode
+            {'cmd': 0x3A, 'data': bytes([0x55])},			# Interface Pixel Format.
+            {'cmd': 0xB4, 'data': bytes([0x01])},			# Column inversion.
+            {'cmd': 0xB6, 'data': bytes([0x80, 0x02, 0x3B])},			# Display Function Control
+            {'cmd': 0xE8, 'data': bytes([0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33])},			# Display Output Ctrl Adjust
+            {'cmd': 0xC1, 'data': bytes([0x06])},			# Power control 2
+            {'cmd': 0xC2, 'data': bytes([0xA7])},			# Power control 3
+            {'cmd': 0xC5, 'data': bytes([0x18]), 'delay': 120},			# VCOM Control
+            {'cmd': 0xE0, 'data': bytes([0xF0, 0x09, 0x0B, 0x06, 0x04, 0x15, 0x2F, 0x54, 0x42, 0x3C, 0x17, 0x14, 0x18, 0x1B])},			# Gamma"+" 
+            {'cmd': 0xE1, 'data': bytes([0xE0, 0x09, 0x0B, 0x06, 0x04, 0x03, 0x2B, 0x43, 0x42, 0x3B, 0x16, 0x14, 0x17, 0x1B]), 'delay': 120},			# Gamma"-"
+            {'cmd': 0xF0, 'data': bytes([0x3C])},			# Disable extension command 2 partI
+            {'cmd': 0xF0, 'data': bytes([0x69])},			# Disable extension command 2 partII
+            {'cmd': 0x29, 'data': bytes([0]), 'delay': 120}			# Display on
         ]
 
         super().__init__(miso=miso, mosi=mosi, clk=clk, cs=cs, dc=dc, rst=rst, power=power, backlight=backlight,
