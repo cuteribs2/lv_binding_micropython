@@ -839,7 +839,7 @@ class st7796s(ili9XXX):
     def __init__(self,
         miso=12, mosi=13, clk=14, cs=15, dc=21, rst=22, power=-1, backlight=23, backlight_on=1, power_on=0,
         spihost=esp.HSPI_HOST, mhz=40, factor=4, hybrid=True, width=320, height=480, start_x=0, start_y=0,
-        colormode=COLOR_MODE_BGR, rot=PORTRAIT, invert=True, double_buffer=True, half_duplex=True,
+        colormode=COLOR_MODE_BGR, rot=PORTRAIT, invert=False, double_buffer=True, half_duplex=True,
         asynchronous=False, initialize=True):
 
         # Make sure Micropython was built such that color won't require processing before DMA
